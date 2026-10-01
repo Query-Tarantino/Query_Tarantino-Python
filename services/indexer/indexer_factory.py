@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Callable, Dict
 
 from .adapters.batch_based_datalake_reader import BatchBasedDatalakeReader
@@ -75,12 +74,9 @@ class IndexerFactory:
 
     @staticmethod
     def tokenizer(config: IndexerConfig) -> Tokenizer:
-        loader = FileStopwordsLoader(Path("stopwords.txt"))
-        try:
-            stopwords = loader.stopwords()
-        except Exception:
-            stopwords = set()
-        return Tokenizer(stopwords)
+        return Tokenizer(
+            FileStopwordsLoader(config.workload / "stopwords.txt").stopwords()
+        )
 
     @staticmethod
     def _option(options: dict, name: str, kind: str):

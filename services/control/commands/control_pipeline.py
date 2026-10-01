@@ -50,23 +50,32 @@ class ControlPipeline:
 
     def _outcome(self, step: NextStep) -> Outcome:
         if step.action == Action.INDEX:
-            return self._register(
-                step, self.indexer.index(step.book_id), self.state.mark_indexed
-            )
+            return self._register(step, self.indexer.index, self.state.mark_indexed)
         elif step.action == Action.DOWNLOAD:
-            return self._register(
-                step, self.crawler.ingest(step.book_id), self.state.mark_downloaded
-            )
+            return self._register(step, self.crawler.ingest, self.state.mark_downloaded)
         elif step.action == Action.IDLE:
             return Outcome.success("nothing left to do")
         else:
             raise ValueError(f"Unknown action {step.action}")
 
     def _register(
-        self, step: NextStep, outcome: Outcome, mark_done: Callable[[int], None]
+        self,
+        step: NextStep,
+        operation: Callable[[int], Outcome],
+        mark_done: Callable[[int], None],
     ) -> Outcome:
+        outcome = self._attempt(operation, step.book_id)
         if outcome.succeeded:
             mark_done(step.book_id)
         else:
             self.failed.add(step.book_id)
         return outcome
+
+    @staticmethod
+    def _attempt(operation: Callable[[int], Outcome], book_id: int) -> Outcome:
+        # An unexpected error fails only this book, like any other failure, instead
+        # of stopping the run at the same book every time it restarts.
+        try:
+            return operation(book_id)
+        except Exception as e:
+            return Outcome.failure(f"failed, {type(e).__name__}: {e}")

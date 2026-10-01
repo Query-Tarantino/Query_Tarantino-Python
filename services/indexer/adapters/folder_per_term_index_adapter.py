@@ -19,7 +19,10 @@ class FolderPerTermIndexAdapter(InvertedIndexStorage):
             self._memory[term].add(occurrences.book_id)
 
     def flush(self) -> None:
-        for term, new_ids in self._memory.items():
+        # Taken out before writing, so a flush that fails does not leave its terms
+        # behind to fail the next one too.
+        pending, self._memory = self._memory, defaultdict(set)
+        for term, new_ids in pending.items():
             if not term:
                 continue
             first_char = term[0].lower()
@@ -44,5 +47,3 @@ class FolderPerTermIndexAdapter(InvertedIndexStorage):
                     f.write(f"{book_id}\n")
 
             os.replace(tmp_file, term_file)
-
-        self._memory.clear()

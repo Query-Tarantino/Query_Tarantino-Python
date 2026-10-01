@@ -26,7 +26,7 @@ class SearchCommand:
     def _books_containing_all(self, terms: Set[str]) -> List[BookMetadata]:
         ids = self._ids_containing_all(terms)
         books = []
-        for book_id in ids:
+        for book_id in sorted(ids):
             book = self.metadata.book(book_id)
             if book is not None:
                 books.append(book)

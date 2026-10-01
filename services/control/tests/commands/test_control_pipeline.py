@@ -26,6 +26,7 @@ class InMemoryState(ControlStateStore):
 
 
 MISSING_BOOK = 404
+BROKEN_BOOK = 500
 
 
 class FakeCrawler(Crawler):
@@ -37,6 +38,13 @@ class FakeCrawler(Crawler):
 
 class FakeIndexer(Indexer):
     def index(self, book_id: int) -> Outcome:
+        return Outcome.success("indexed")
+
+
+class BrokenIndexer(Indexer):
+    def index(self, book_id: int) -> Outcome:
+        if book_id == BROKEN_BOOK:
+            raise OSError("cannot write term file")
         return Outcome.success("indexed")
 
 
@@ -76,3 +84,24 @@ def test_resumes_by_indexing_books_downloaded_before_an_interruption():
     pipeline = ControlPipeline(state, crawler, indexer, [])
 
     assert pipeline.next_step() == NextStep.index(7)
+
+
+def test_an_error_fails_only_its_book_and_the_run_goes_on():
+    state = InMemoryState()
+    candidates = [1, BROKEN_BOOK, 2]
+    pipeline = ControlPipeline(state, FakeCrawler(), BrokenIndexer(), candidates)
+
+    reports = []
+    while True:
+        report = pipeline.run_step()
+        if report.idle():
+            break
+        reports.append(report)
+
+    failures = [report for report in reports if not report.outcome.succeeded]
+    assert [report.step for report in failures] == [NextStep.index(BROKEN_BOOK)]
+    assert failures[0].outcome.detail == "failed, OSError: cannot write term file"
+    assert state.indexed() == {1, 2}
+
+    next_run = ControlPipeline(state, FakeCrawler(), BrokenIndexer(), candidates)
+    assert next_run.next_step() == NextStep.index(BROKEN_BOOK)

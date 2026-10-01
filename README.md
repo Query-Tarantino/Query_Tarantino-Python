@@ -1,4 +1,4 @@
-# Query Tarantino â€” Stage 1: Data Layer (Python)
+# Query Tarantino Stage 1: Data Layer (Python)
 
 Python implementation of the data layer of a search engine over [Project Gutenberg](https://www.gutenberg.org/) books:
 a **datalake** with the raw texts, **datamarts** with metadata and an inverted index, and a minimal **control layer**

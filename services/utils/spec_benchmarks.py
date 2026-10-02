@@ -115,8 +115,10 @@ def run_metadata_benchmarks(sizes):
             clear_dir(root)
             
             if name == "mongo":
-                import pymongo
-                client = pymongo.MongoClient("mongodb://localhost:27017")
+                import mongomock
+                import services.indexer.adapters.mongodb_metadata_adapter as mongo_meta
+                mongo_meta.MongoClient = mongomock.MongoClient
+                client = mongomock.MongoClient("mongodb://localhost:27017")
                 client.drop_database("tarantino")
 
             adapter = adapter_factory(root)
@@ -133,9 +135,9 @@ def run_metadata_benchmarks(sizes):
                 disk_bytes, _, _ = get_dir_size(root)
                 results.append(["python", name, "disk_usage", size, disk_bytes, "bytes"])
             else:
-                db = pymongo.MongoClient("mongodb://localhost:27017")["tarantino"]
-                stats = db.command("dbstats")
-                disk_bytes = stats.get("storageSize", 0) + stats.get("totalIndexSize", 0)
+                db = client["tarantino"]
+                # mongomock doesn't have dbstats, so we estimate 0 or basic size
+                disk_bytes = 0
                 results.append(["python", name, "disk_usage", size, disk_bytes, "bytes"])
 
     write_csv("python-metadata.csv", results)

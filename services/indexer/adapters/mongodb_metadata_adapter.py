@@ -20,7 +20,7 @@ class MongodbMetadataAdapter(MetadataStorage):
                     "title": book.title,
                     "author": book.author,
                     "language": book.language,
-                    "path": str(book.path) if book.path else None,
+                    "path": book.path.as_posix() if book.path else None,
                 }
             },
             upsert=True,

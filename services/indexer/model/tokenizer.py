@@ -1,6 +1,15 @@
 from __future__ import annotations
 
-import re
+try:
+    import regex as re_lib
+    _PATTERN = r"\p{L}+"
+    _FLAGS = re_lib.UNICODE
+except ImportError:
+    # Fallback for Windows App Control blocking the regex C-extension DLL
+    import re as re_lib
+    _PATTERN = r"[^\W\d_]+"
+    _FLAGS = re_lib.UNICODE
+
 from collections import Counter
 from typing import Dict, Iterator, Set
 
@@ -8,7 +17,7 @@ from .term_occurrences import TermOccurrences
 
 
 class Tokenizer:
-    TERM = re.compile(r"[^\W\d_]+", re.UNICODE)
+    TERM = re_lib.compile(_PATTERN, _FLAGS)
     MIN_TERM_LENGTH = 2
 
     def __init__(self, stopwords: Set[str]):

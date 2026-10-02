@@ -38,12 +38,12 @@ class FileControlStateStore(ControlStateStore):
     @staticmethod
     def _lines(file_path: Path) -> List[str]:
         if file_path.exists():
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, "r", encoding="utf-8", newline="\n") as f:
                 return f.readlines()
         return []
 
     @staticmethod
     def _append(file_path: Path, book_id: int) -> None:
         file_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(file_path, "a", encoding="utf-8") as f:
+        with open(file_path, "a", encoding="utf-8", newline="\n") as f:
             f.write(f"{book_id}\n")

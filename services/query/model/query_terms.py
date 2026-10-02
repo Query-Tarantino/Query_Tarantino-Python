@@ -1,9 +1,18 @@
-import re
+try:
+    import regex as re_lib
+    _PATTERN = r"\p{L}+"
+    _FLAGS = re_lib.UNICODE
+except ImportError:
+    # Fallback for Windows App Control blocking the regex C-extension DLL
+    import re as re_lib
+    _PATTERN = r"[^\W\d_]+"
+    _FLAGS = re_lib.UNICODE
+
 from typing import Set
 
 
 class QueryTerms:
-    _TERM = re.compile(r"[^\W\d_]+")
+    _TERM = re_lib.compile(_PATTERN, _FLAGS)
     _MIN_TERM_LENGTH = 2
 
     @staticmethod

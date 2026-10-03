@@ -20,8 +20,14 @@ from services.utils.cache_downloader import ensure_cache, load_cached_book
 
 
 def clear_dir(path: Path):
-    if path.exists():
-        shutil.rmtree(path)
+    for _ in range(10):
+        if not path.exists():
+            break
+        try:
+            shutil.rmtree(path)
+            break
+        except PermissionError:
+            time.sleep(0.2)
     path.mkdir(parents=True, exist_ok=True)
 
 
@@ -57,9 +63,10 @@ def run_crawler_benchmarks(sizes, cache_ids, cache_path):
     }
 
     for size in sizes:
-        if size > len(cache_ids):
-            continue
         ids_to_process = cache_ids[:size]
+        if not ids_to_process:
+            continue
+        actual_size = len(ids_to_process)
 
         for name, adapter_class in adapters.items():
             root = Path(f"benchmarks/tmp/datalake-{name}-{size}")

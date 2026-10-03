@@ -11,10 +11,12 @@ def ensure_cache(workload_path: Path, cache_path: Path, needed_books: int = 1000
     with open(book_ids_file, "r") as f:
         book_ids = [line.strip() for line in f if line.strip().isdigit()]
 
-    book_ids = book_ids[:needed_books]
     available_ids = []
-
+    
     for book_id in book_ids:
+        if len(available_ids) >= needed_books:
+            break
+            
         file_path = cache_path / f"{book_id}.txt"
         if file_path.exists():
             available_ids.append(int(book_id))

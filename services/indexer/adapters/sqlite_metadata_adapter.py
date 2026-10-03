@@ -27,16 +27,19 @@ class SqliteMetadataAdapter(MetadataStorage):
 
     def save(self, book: Book) -> None:
         self.database.parent.mkdir(parents=True, exist_ok=True)
-        with sqlite3.connect(self.database) as conn:
-            conn.execute(self.CREATE_TABLE)
-            conn.execute(
-                self.UPSERT,
-                (
-                    book.book_id,
-                    book.title,
-                    book.author,
-                    book.language,
-                    book.path.as_posix(),
-                ),
-            )
-            conn.commit()
+        conn = sqlite3.connect(self.database)
+        try:
+            with conn:
+                conn.execute(self.CREATE_TABLE)
+                conn.execute(
+                    self.UPSERT,
+                    (
+                        book.book_id,
+                        book.title,
+                        book.author,
+                        book.language,
+                        book.path.as_posix(),
+                    ),
+                )
+        finally:
+            conn.close()
